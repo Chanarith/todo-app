@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as todoApi from "../../api/todo.api"
 
-function list() {
+function list(searchString) {
   const query = useQuery({
-    queryKey: ["todos"],
-    queryFn: todoApi.list,
+    queryKey: ["todos", searchString],
+    queryFn: async () => await todoApi.list(searchString),
   })
 
   return query
@@ -51,7 +51,7 @@ function remove(id) {
   const queryClient = useQueryClient()
   const mutation = useMutation({
     mutationKey: ["todos", id],
-    mutationFn: todoApi.remove,
+    mutationFn: async () => await todoApi.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries("todos")
     },

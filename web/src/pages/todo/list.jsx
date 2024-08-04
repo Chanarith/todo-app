@@ -15,10 +15,13 @@ import * as useTodoQuery from "../../hooks/queries/todo.query"
 import { useState } from "react"
 import { useForm } from "@mantine/form"
 import { IconInfoCircle } from "@tabler/icons-react"
+import { useDebouncedState } from "@mantine/hooks"
 
 export default function List() {
   const [hoveredTodo, setHoveredTodo] = useState(null)
   const [selectedTodo, setSelectedTodo] = useState(null)
+
+  const [filter, setFilter] = useDebouncedState("", 500)
 
   const isEditing = selectedTodo !== null
 
@@ -27,13 +30,13 @@ export default function List() {
     isLoading: todosLoading,
     isError: todosError,
     isSuccess: todosSuccess,
-  } = useTodoQuery.list()
+  } = useTodoQuery.list(filter)
 
   const createTodoMutation = useTodoQuery.create()
 
   const editTodoMutation = useTodoQuery.edit(selectedTodo)
 
-  const removeTodoMutation = useTodoQuery.remove(selectedTodo)
+  const removeTodoMutation = useTodoQuery.remove(hoveredTodo)
 
   const form = useForm({
     mode: "uncontrolled",
@@ -98,9 +101,11 @@ export default function List() {
               {...form.getInputProps("title")}
             />
           </form>
-          <form>
-            <TextInput placeholder="Filter fuzzy" />
-          </form>
+          <TextInput
+            placeholder="Filter"
+            defaultValue={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
           <Flex direction="column" justify="center">
             {todosLoading && <Text>Loading...</Text>}
             {todosError && <Text c="red">Failed to load todos</Text>}
@@ -129,9 +134,7 @@ export default function List() {
                     }}
                   >
                     <Box>
-                      <Text tt="capitalize" size="md">
-                        {todo.title}
-                      </Text>
+                      <Text size="md">{todo.title}</Text>
                     </Box>
                   </Box>
                   <Flex

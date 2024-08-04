@@ -10,12 +10,15 @@ use App\Http\Requests\CreateTodoRequest;
 use App\Http\Responses\TodoDeleteSuccessFulResponse;
 use App\Http\Responses\TodoFailToDelete;
 use App\Http\Responses\TodoUpdateSuccessfulResponse;
+use Illuminate\Http\Request;
 
 class TodoController extends Controller
 {
-    public function listAll()
+    public function listAll(Request $request)
     {
-        $todos = Todo::all();
+        $todos = Todo::when($request->has('search'), function () {
+            return Todo::where('title', 'like', '%' . request('search') . '%');
+        })->get();
 
         return response()->json(
             $todos,

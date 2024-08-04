@@ -1,7 +1,11 @@
 import axios from "../utils/axios"
 
-async function list() {
-  return await axios.get("/todos")
+async function list(searchString) {
+  return await axios.get("/todos", {
+    params: {
+      search: searchString,
+    },
+  })
 }
 
 async function get(id) {
