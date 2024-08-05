@@ -17,6 +17,10 @@ import { useForm } from "@mantine/form"
 import { IconInfoCircle } from "@tabler/icons-react"
 import { useDebouncedState } from "@mantine/hooks"
 
+const DEFAULT_FORM_VALUES = {
+  title: "",
+}
+
 export default function List() {
   const [hoveredTodo, setHoveredTodo] = useState(null)
   const [selectedTodo, setSelectedTodo] = useState(null)
@@ -40,9 +44,7 @@ export default function List() {
 
   const form = useForm({
     mode: "uncontrolled",
-    initialValues: {
-      title: "",
-    },
+    initialValues: DEFAULT_FORM_VALUES,
     validate: {
       title: (value) => {
         if (!value) {
@@ -52,15 +54,29 @@ export default function List() {
     },
   })
 
+  const handleTitleMutationError = (error) => {
+    form.setFieldError("title", error.response.data.message)
+  }
+
   const handleFormSubmit = (values) => {
-    if (isEditing) {
-      editTodoMutation.mutate({ data: values })
-      setSelectedTodo(null)
-      form.reset()
-    } else {
-      createTodoMutation.mutate(values)
-      form.reset()
+    if (!form.isDirty("title")) {
+      return
     }
+    if (isEditing) {
+      editTodoMutation.mutate(
+        { data: values },
+        {
+          onError: handleTitleMutationError,
+        }
+      )
+      setSelectedTodo(null)
+    } else {
+      createTodoMutation.mutate(values, {
+        onError: handleTitleMutationError,
+      })
+    }
+    form.setInitialValues(DEFAULT_FORM_VALUES)
+    form.reset()
   }
 
   const handleDeleteTodo = () => {
@@ -91,13 +107,6 @@ export default function List() {
               key={form.key("title")}
               autoFocus
               placeholder="Add todo"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.target.dispatchEvent(
-                    new Event("submit", { cancelable: true })
-                  )
-                }
-              }}
               {...form.getInputProps("title")}
             />
           </form>
@@ -152,8 +161,9 @@ export default function List() {
                           return
                         }
                         setSelectedTodo(todo.id)
-                        form.setFieldValue("title", todo?.title)
+                        form.setInitialValues({ title: todo.title })
                         form.getInputNode("title").focus()
+                        form.reset()
                       }}
                     >
                       {selectedTodo === todo.id ? "Clear" : "Edit"}
@@ -170,7 +180,6 @@ export default function List() {
                 </Flex>
               ))}
           </Flex>
-          <Divider />
         </Flex>
       </Paper>
     </Container>

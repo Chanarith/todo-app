@@ -22,7 +22,21 @@ class UpdateTodoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string'],
+            'title' => ['required', 'string', 'unique:todos,title'],
+        ];
+    }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'Title is required',
+            'title.string' => 'Title must be a string',
+            'title.unique' => 'Title must be unique',
         ];
     }
 }
